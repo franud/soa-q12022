@@ -10,6 +10,8 @@ add (int par1, int par2)
   return par1 + par2;
 }
 
+int addAsm(int, int);
+
 int __attribute__ ((__section__(".text.main")))
   main(void)
 {
@@ -21,8 +23,8 @@ int __attribute__ ((__section__(".text.main")))
 values (like 0x42 and 0x666) and store the resulting value in a local variable.
   */
  int sum_result;
-
+ int sum_asm_result;
  sum_result = add (0x42, 0x666);
-    
+ sum_asm_result = addAsm (0x42, 0x666);
   while(1) { }
 }
