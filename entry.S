@@ -49,5 +49,25 @@
       pushl %ebx; \
       movl $__KERNEL_DS, %edx;    \
       movl %edx, %ds;           \
-      movl %edx, %es
+      movl %edx, %es;
 
+#define RESTORE_ALL \
+      popl %ebx; \
+      popl %ecx; \
+      popl %edx; \
+      popl %esi; \
+      popl %edi; \
+      popl %ebp; \
+      popl %eax; \
+      popl %ds; \
+      popl %es; \
+      popl %fs; \
+      popl %gs; 
+
+// clock_handler
+/* ENTRY(clock_handler)
+	SAVE_ALL
+	call clock_routine
+	RESTORE_ALL
+	iret
+// */
