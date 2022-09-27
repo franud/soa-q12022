@@ -104,7 +104,7 @@ emul: zeos.bin
 	bochs -q -f .bochsrc
 
 gdb: zeos.bin
-	bochs -q -f .bochsrc_gdb &
+	bochs-gdb -q -f .bochsrc_gdb &
 	gdb -x .gdbcmd system
 
 emuldbg: zeos.bin
