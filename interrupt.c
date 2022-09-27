@@ -86,4 +86,24 @@ void setIdt()
 
   set_idt_reg(&idtR);
 }
+void keyboard_routine() {
+  unsigned char input = inb(0x60);
+  // char make == input bitshifted, discarding bits 0..6.
+  unsigned char make = input >> 7;
 
+  // only runs if bit number 7 indicated a keypress
+  if (make != 0) {
+    // remove bit number 7 using a bitmask.
+    unsigned char mask_filter = 0b01111111;
+    unsigned char value = input & mask_filter;
+
+    unsigned char c = char_map[value];
+
+    // if c isn't a recognised character, assign 'C' to it.
+    if (c == '\0') c = 'C';
+
+    // print the corresponding character
+    printc_xy(0, 0, c);
+  }
+
+}
