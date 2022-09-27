@@ -64,6 +64,10 @@
       popl %fs; \
       popl %gs; 
 
+#define EOI \
+	movb $0x20, %al; \
+	outb %al, 0x20 ;
+
 // clock_handler
 /* ENTRY(clock_handler)
 	SAVE_ALL
