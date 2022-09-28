@@ -65,13 +65,21 @@
       popl %gs; 
 
 #define EOI \
-	movb $0x20, %al; \
-	outb %al, 0x20 ;
+      movb $0x20, %al; \
+      outb %al, 0x20 ;
 
 // clock_handler
 /* ENTRY(clock_handler)
-	SAVE_ALL
-	call clock_routine
-	RESTORE_ALL
-	iret
+        SAVE_ALL
+        call clock_routine
+        RESTORE_ALL
+        iret
 // */
+
+// keyboard_handler
+ENTRY(keyboard_handler)
+      SAVE_ALL
+      call keyboard_routine
+      RESTORE_ALL
+      EOI
+      iret
