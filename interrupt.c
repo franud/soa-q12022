@@ -88,11 +88,11 @@ void setIdt()
 }
 void keyboard_routine() {
   unsigned char input = inb(0x60);
-  // char make == input bitshifted, discarding bits 0..6.
-  unsigned char make = input >> 7;
+  // char make_bit == input bitshifted, discarding bits 0..6.
+  unsigned char make_bit = input >> 7;
 
   // only runs if bit number 7 indicated a keypress
-  if (make != 0) {
+  if (make_bit != 0) {
     // remove bit number 7 using a bitmask.
     unsigned char mask_filter = 0b01111111;
     unsigned char value = input & mask_filter;
