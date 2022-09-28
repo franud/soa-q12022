@@ -6,6 +6,7 @@
 #include <segment.h>
 #include <hardware.h>
 #include <io.h>
+#include <entry.h>
 
 #include <zeos_interrupt.h>
 
@@ -81,11 +82,14 @@ void setIdt()
   idtR.limit = IDT_ENTRIES * sizeof(Gate) - 1;
   
   set_handlers();
+  setInterruptHandler(33, keyboard_handler, 0);
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
 
   set_idt_reg(&idtR);
 }
+
+
 void keyboard_routine() {
   unsigned char input = inb(0x60);
   // char make_bit == input bitshifted, discarding bits 0..6.
