@@ -66,7 +66,7 @@
 
 #define EOI \
       movb $0x20, %al; \
-      outb %al, 0x20 ;
+      outb %al, $0x20 ;
 
 // clock_handler
 /* ENTRY(clock_handler)
@@ -82,4 +82,4 @@ ENTRY(keyboard_handler)
       call keyboard_routine
       RESTORE_ALL
       EOI
-      iret
+      iret;
