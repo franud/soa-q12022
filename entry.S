@@ -89,7 +89,7 @@ ENTRY(system_call_handler)
 	jmp fin					// Finish routine
 err:
 	movl $-ENOSYS, %eax			// Return ENOSYS error.
-err:
+fin:
 	movl %eax, 0x18(%esp)			// Store, in the stack, the %eax value returned by the routine so it isn't smashed by RESTORE_ALL.
 	RESTORE_ALL				// restore context
 	iret
