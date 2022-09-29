@@ -82,14 +82,14 @@
 ENTRY(system_call_handler)
 	SAVE_ALL				// Save context
 	cmpl $0, %eax				// is syscall number negative?
-	jl err					// if sc_number < 0, return error.
+	jl 1f					// if sc_number < 0, return error.
 	cmpl $MAX_SYSCALL, %eax			// check if syscall number is higher than the syscall_table's range
-	jg err					// return error if it is.
+	jg 1f					// return error if it is.
 	call *sys_call_table(, %eax, 0x04)	// sys_call_table address + %eax * 4 => call the corresponding routine (table entry specified by eax register).
-	jmp fin					// Finish routine
-err:
+	jmp 2f					// Finish routine
+1:
 	movl $-ENOSYS, %eax			// Return ENOSYS error.
-fin:
+2:
 	movl %eax, 0x18(%esp)			// Store, in the stack, the %eax value returned by the routine so it isn't smashed by RESTORE_ALL.
 	RESTORE_ALL				// restore context
 	iret
