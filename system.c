@@ -72,8 +72,9 @@ int __attribute__((__section__(".text.main")))
 
   /*** DO *NOT* ADD ANY CODE IN THIS ROUTINE BEFORE THIS POINT ***/
 
-  printk("Kernel Loaded!    ");
-
+  printk("Kernel Loaded!    \n");
+  printk("Este es nuestro primer sistema operativo.. yay ! :p\n");
+  printk("oOoOo! Carlos y Fran !!\n");
 
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
@@ -98,7 +99,7 @@ int __attribute__((__section__(".text.main")))
   copy_data((void *) KERNEL_START + *p_sys_size, usr_main, *p_usr_size);
 
 
-  printk("Entering user mode...");
+  printk("Entering user mode...\n");
 
   enable_int();
   /*
