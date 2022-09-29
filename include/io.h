@@ -14,5 +14,6 @@ Byte inb (unsigned short port);
 void printc(char c);
 void printc_xy(Byte x, Byte y, char c);
 void printk(char *string);
+void printk_black_grey(char *string);
 
 #endif  /* __IO_H__ */

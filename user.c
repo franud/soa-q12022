@@ -1,4 +1,5 @@
 #include <libc.h>
+#include <io.h>
 
 char buff[24];
 
