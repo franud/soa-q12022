@@ -7,5 +7,6 @@
 
 void keyboard_handler();
 void system_call_handler();
+void syscall_handler_sysenter();
 
 #endif  /* __ENTRY_H__ */
