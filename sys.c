@@ -1,7 +1,8 @@
 /*
  * sys.c - Syscalls implementation
  */
-#include "errno.h"
+#include <errno.h>
+#include <types.h>
 #include <devices.h>
 
 #include <utils.h>
@@ -24,15 +25,16 @@ int check_fd(int fd, int permissions)
     return 0;
 }
 
-char write_buffer[256];
+
 #define BUFFER_SIZE 256
+char write_buffer[BUFFER_SIZE];
 
 int sys_write(int fd, char * buffer, int size) {
     int err = check_fd(fd, ESCRIPTURA);
     if (err) return err; // if check_fd returned an error, return that same error.
     if (buffer == NULL) return -EFAULT; // error out if buffer is null.
     if (size < 1) return -EINVAL; // error out if there is nothing to write (size < 1).
-  
+
     int bytes = size;
     int bytes_written;
   
