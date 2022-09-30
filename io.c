@@ -24,23 +24,37 @@ Byte inb (unsigned short port)
   return v;
 }
 
+void scroll () {
+  Word *screen = (Word *)0xb8000;
+  for (Byte j = 1; j < NUM_ROWS; ++j) {
+    for (Byte i = 0; i < NUM_COLUMNS; ++i) {
+      screen [( (j - 1) * NUM_COLUMNS + i )] = screen [ (j * NUM_COLUMNS + i) ];
+    }
+  }
+
+  for (Byte i = 0; i < NUM_COLUMNS; ++i) {
+    screen [(NUM_ROWS - 1) * NUM_COLUMNS + i] = 0x0000;
+  }
+
+  y = NUM_ROWS - 1;
+  x = 0;
+}
+
 void printc(char c)
 {
      __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
   if (c=='\n')
   {
-    x = 0;
-    y=(y+1)%NUM_ROWS;
+    scroll ();
   }
   else
   {
     Word ch = (Word) (c & 0x00FF) | 0x0200;
-	Word *screen = (Word *)0xb8000;
-	screen[(y * NUM_COLUMNS + x)] = ch;
+    Word *screen = (Word *)0xb8000;
+    screen[(y * NUM_COLUMNS + x)] = ch;
     if (++x >= NUM_COLUMNS)
     {
-      x = 0;
-      y=(y+1)%NUM_ROWS;
+      scroll();
     }
   }
 }

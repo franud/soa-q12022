@@ -15,5 +15,6 @@ void printc(char c);
 void printc_xy(Byte x, Byte y, char c);
 void printk(char *string);
 void printk_black_grey(char *string);
+void scroll ();
 
 #endif  /* __IO_H__ */
