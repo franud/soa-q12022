@@ -6,6 +6,10 @@
 
 #include <types.h>
 
+#include <errno.h>
+
+#include <errmsg.h>
+
 int errno;
 
 void itoa(int a, char *b)
@@ -43,3 +47,11 @@ int strlen(char *a)
   return i;
 }
 
+void perror() {
+  if (errno < MIN_ERRNO_VALUE || errno > MAX_ERRNO_VALUE)
+    errno = 1;
+
+  write(1, "ERROR:", 7);
+  write(1, errmsg[errno -1], strlen(errmsg[errno-1]));
+  write(1, "\n", 1);
+}

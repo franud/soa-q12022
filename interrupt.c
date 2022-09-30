@@ -1,11 +1,13 @@
 /*
  * interrupt.c -
  */
+#include <sched.h>
 #include <types.h>
 #include <interrupt.h>
 #include <segment.h>
 #include <hardware.h>
 #include <io.h>
+#include <entry.h>
 
 #include <zeos_interrupt.h>
 
@@ -28,6 +30,9 @@ char char_map[] =
   '\0','\0','\0','\0','\0','\0','\0','\0',
   '\0','\0'
 };
+
+
+int zeos_ticks = 0;
 
 void setInterruptHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
 {
@@ -84,6 +89,41 @@ void setIdt()
 
   /* ADD INITIALIZATION CODE FOR INTERRUPT VECTOR */
 
+  setInterruptHandler(33, keyboard_handler, 0);
+  setInterruptHandler(32, clock_handler, 0);
+
+  setTrapHandler(0x80, system_call_handler, 3);
+
+
   set_idt_reg(&idtR);
 }
 
+void setMSR() {
+  writeMSR(0x174, __KERNEL_CS);
+  writeMSR(0x175, INITIAL_ESP);
+  writeMSR(0x176, (unsigned int) syscall_handler_sysenter);
+}
+
+
+void keyboard_routine() {
+  unsigned char input = inb(0x60);
+
+  // only runs if bit number 7 indicated a keypress
+  if (input <= 128) {
+
+    unsigned char c = char_map[input];
+
+    // if c isn't a recognised character, assign 'C' to it.
+    if (c == '\0') c = 'C';
+
+    // print the corresponding character
+    printc_xy(0, 0, c);
+  }
+
+}
+
+void clock_routine() {
+  ++zeos_ticks;
+
+  zeos_show_clock();
+}
