@@ -64,8 +64,7 @@ void printc_color(char c)
      __asm__ __volatile__ ( "movb %0, %%al; outb $0xe9" ::"a"(c)); /* Magic BOCHS debug: writes 'c' to port 0xe9 */
   if (c=='\n')
   {
-    x = 0;
-    y=(y+1)%NUM_ROWS;
+    scroll();
   }
   else
   {
@@ -74,8 +73,7 @@ void printc_color(char c)
 	screen[(y * NUM_COLUMNS + x)] = ch;
     if (++x >= NUM_COLUMNS)
     {
-      x = 0;
-      y=(y+1)%NUM_ROWS;
+      scroll();
     }
   }
 }

@@ -75,7 +75,7 @@ int __attribute__((__section__(".text.main")))
   printk("Kernel Loaded!    \n");
   printk("Este es nuestro primer sistema operativo.. yay ! :p\n");
   printk("oOoOo! Carlos y Fran !!\n");
-  printk("Prueba de cambio de colores??? Es esto letras negras y fondo gris????aaaaaaaaaaahhsdhjjajhsdhjhjhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhhh\nSi lo es!!! yay!!!\neee\ne\ne\neee\ne\n");
+  printk_black_grey("Prueba de cambio de colores??? Es esto letras negras y fondo gris????aaaaaaaaaaahhsdhjjajhsdhjhjhhhhhhhhhh\nSi lo es!!! oleeee!!!\nhola carlos buenas noches !\n");
 
   /* Initialize hardware data */
   setGdt(); /* Definicio de la taula de segments de memoria */
