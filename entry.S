@@ -69,15 +69,6 @@
       movb $0x20, %al; \
       outb %al, $0x20 ;
 
-// clock_handler
-/* ENTRY(clock_handler)
-        SAVE_ALL
-        call clock_routine
-        RESTORE_ALL
-        iret
-// */
-
-
 // System call handler
 ENTRY(system_call_handler)
 	SAVE_ALL				// Save context
@@ -136,7 +127,15 @@ ENTRY(writeMSR)
 // keyboard_handler
 ENTRY(keyboard_handler)
       SAVE_ALL
+      EOI
       call keyboard_routine
       RESTORE_ALL
-      EOI
       iret;
+
+// clock_handler
+ENTRY(clock_handler)
+     SAVE_ALL
+     EOI
+     call clock_routine
+     RESTORE_ALL
+     iret
