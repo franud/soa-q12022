@@ -94,6 +94,30 @@ ENTRY(system_call_handler)
 	RESTORE_ALL				// restore context
 	iret
 
+// System call handler sysenter
+ENTRY(syscall_handler_sysenter)
+	push $__USER_DS
+	push %ebp				// User stack address
+	pushfl
+	push $__USER_CS
+	push 4(%ebp)				// User return address
+	SAVE_ALL
+	cmpl $0, %EAX				// goto Error label if negative entry
+	jl 1f
+	cmpl $MAX_SYSCALL, %eax
+	jg 1f					// error out
+	call *sys_call_table(, %eax, 0x04)
+	jmp 2f					// skip error
+1:						// Error label
+	movl $-ENOSYS, %eax
+2:						// Fin label
+	movl %eax, 0x18(%esp)			// store return value in the stack, otherwise RESTORE_ALL will override it.
+	RESTORE_ALL
+	movl (%esp), %edx			// return address
+	movl 12(%esp), %ecx			// user stack address
+	sti					// enable interrupts again
+	sysexit
+
 
 // keyboard_handler
 ENTRY(keyboard_handler)
