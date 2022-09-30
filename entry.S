@@ -118,6 +118,20 @@ ENTRY(syscall_handler_sysenter)
 	sti					// enable interrupts again
 	sysexit
 
+ENTRY(writeMSR)
+	# Two params:
+	# MSR number
+	# value to store
+	push %ebp
+	movl %esp, %ebp
+
+	mov 8(%ebp) %ecx
+	movl $0, %edx
+	mov 12(%ebp), %eax
+	wrmsr					// Description: "Write the value in EDX:EAX to MSR specified by ECX"
+
+	pop %ebp
+	ret
 
 // keyboard_handler
 ENTRY(keyboard_handler)
