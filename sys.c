@@ -25,6 +25,7 @@ int check_fd(int fd, int permissions)
     return 0;
 }
 
+extern int zeos_ticks;
 
 #define BUFFER_SIZE 256
 char write_buffer[BUFFER_SIZE];
@@ -53,6 +54,10 @@ int sys_write(int fd, char * buffer, int size) {
     
     return size-bytes;
   }
+int sys_gettime() {
+    return zeos_ticks;
+}
+
 
 int sys_ni_syscall()
 {
