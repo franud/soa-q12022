@@ -43,3 +43,11 @@ int strlen(char *a)
   return i;
 }
 
+void perror () 
+{
+  char buffer [3];
+  itoa (errno, buffer);
+  write (1, "PERROR\n", 7);
+  write (1, buffer, 3);
+  write (1, "\n", 1);
+}
