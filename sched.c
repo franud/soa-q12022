@@ -58,7 +58,41 @@ void cpu_idle(void)
 
 void init_idle (void)
 {
+	// grab list pointer of a free task from freequeue
+	struct list_head * idle_list_pointer = list_first(&freequeue);
+	// remove it from freeque.
+	list_del(idle_list_pointer);
+	
+	// get it's corresponding PCB.
+	struct task_struct * idle_pcb = list_head_to_task_struct(idle_list_pointer);
+	
+	// set task PID to 0.
+	idle_pcb->PID = 0;
+	// initalize dir_pages_baseAddr field of the task.
+	allocate_DIR(idle_pcb);
+	
+	// get corresponding task_union.
+	union task_union * idle_task_union = (union task_union *) idle_pcb;
+	
+	/* For compatibility with task_switch, set the stack as follows:
+	 * - set the value right above the bottom of the stack to 0.
+	 *   (task_switch will pop that value into EBP before returning,
+	 *   0 shouldn't cause any conflicts)
+	 * - set the bottom of the stack to point to the cpu_idle routine.
+	 *   (task_switch should call that routine using a ret instruction)
+	 */
+	idle_task_union->stack[KERNEL_STACK_SIZE-2] = 0;
+	idle_task_union->stack[KERNEL_STACK_SIZE-1] = (unsigned long) cpu_idle;
 
+	/* The previous values are useless if the kernel_esp field doesn't
+	 * point at them.
+	 * For that reason this task's kernel_esp shall point at the value we
+	 * want task_switch to pop into EBP.
+	 */
+	idle_pcb->kernel_esp = &(idle_task_union->stack[KERNEL_STACK_SIZE-2]);
+
+	// set global variable idle_task to point at the now initialized idle PCB
+	idle_task = idle_pcb;
 }
 
 void init_task1(void)
