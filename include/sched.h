@@ -40,7 +40,7 @@ void init_idle(void);
 
 void init_sched(void);
 
-struct task_struct * idle_task;
+extern struct task_struct * idle_task;
 
 struct task_struct * current();
 
