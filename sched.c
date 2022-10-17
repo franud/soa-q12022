@@ -2,6 +2,8 @@
  * sched.c - initializes struct for task 0 anda task 1
  */
 
+#include <interrupt.h>
+#include <entry.h>
 #include <list.h>
 #include <sched.h>
 #include <mm.h>
@@ -87,7 +89,7 @@ void init_idle (void)
 	/* The previous values are useless if the kernel_esp field doesn't
 	 * point at them.
 	 * For that reason this task's kernel_esp shall point at the value we
-	 * want task_switch to pop into EBP.
+	 * want task_swit*ch to pop into EBP.
 	 */
 	idle_pcb->kernel_esp = &(idle_task_union->stack[KERNEL_STACK_SIZE-2]);
 
@@ -97,7 +99,23 @@ void init_idle (void)
 
 void init_task1(void)
 {
-	
+	struct list_head * init_list_pointer = list_first(&freequeue);
+	list_del(init_list_pointer);
+
+	struct task_struct * init_pcb = list_head_to_task_struct(init_list_pointer);
+	init_pcb->PID = 1;
+	allocate_DIR(init_pcb);
+
+	set_user_pages(init_pcb);
+
+	union task_union * init_task_union = (union task_union *) init_pcb;
+
+	tss.esp0 = KERNEL_ESP(init_task_union);
+
+	writeMSR(0x175, (unsigned int) tss.esp0);
+
+	set_cr3(init_pcb->dir_pages_baseAddr);
+
 }
 
 
