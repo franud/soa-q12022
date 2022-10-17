@@ -30,7 +30,8 @@ ENTRY(write)
     movl %esp, %ebp
 
     pushl %ebx
-
+    pushl %ecx
+    pushl %edx
 
     movl 8(%ebp), %ebx
     movl 12(%ebp), %ecx
@@ -38,8 +39,21 @@ ENTRY(write)
 
     movl $4, %eax
 
-    int $0x80
-    
+    pushl $5f
+
+    pushl %ebp
+    mov %esp, %ebp
+
+    sysenter
+5:
+
+    popl %ebp
+    addl $4, %esp
+
+    popl %edx
+    popl %ecx
+    popl %ebx
+
     cmpl $0, %eax /* eax >= 0*/
     jge endif 
     /*Si es negativo el error*/
@@ -50,7 +64,6 @@ ENTRY(write)
     
 endif:
 
-    popl %ebx
     popl %ebp
 
     ret

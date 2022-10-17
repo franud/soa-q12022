@@ -7,5 +7,8 @@
 
 void keyboard_handler();
 void system_call_handler();
+void syscall_handler_sysenter();
+
+void writeMSR (unsigned int msr_register_code, unsigned int value);
 
 #endif  /* __ENTRY_H__ */

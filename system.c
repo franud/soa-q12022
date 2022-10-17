@@ -79,6 +79,7 @@ int __attribute__((__section__(".text.main")))
   setGdt(); /* Definicio de la taula de segments de memoria */
   setIdt(); /* Definicio del vector de interrupcions */
   setTSS(); /* Definicio de la TSS */
+  setMSR();
 
   /* Initialize Memory */
   init_mm();
@@ -101,6 +102,7 @@ int __attribute__((__section__(".text.main")))
   printk("Entering user mode...");
 
   enable_int();
+  
   /*
    * We return from a 'theorical' call to a 'call gate' to reduce our privileges
    * and going to execute 'magically' at 'usr_main'...

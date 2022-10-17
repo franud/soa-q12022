@@ -89,3 +89,47 @@ fin:
       movl %eax, 0x18(%esp)
       RESTORE_ALL
       iret
+
+ENTRY(syscall_handler_sysenter)
+      push $__USER_DS
+      push %ebp
+      /* User stack address */
+      pushfl
+      push $__USER_CS
+      push 4(%ebp)
+      /* User return address */
+      SAVE_ALL
+      cmpl $0, %eax
+      jl sysenter_err
+      cmpl $MAX_SYSCALL, %eax
+      jg sysenter_err
+      call *sys_call_table(, %eax, 0x04)
+      jmp sysenter_fin
+sysenter_err:
+      movl $-ENOSYS, %eax
+sysenter_fin:
+      movl %eax, 0x18(%esp)
+      RESTORE_ALL
+      movl (%esp), %edx
+      /* Return address */
+      movl 12(%esp), %ecx // User stack address
+      sti
+      /* Enable interrupts again */
+      sysexit
+
+ENTRY(writeMSR)
+      /* Two parameters: msr_register_code (%ebp + 8)
+                         value (%ebp + 12)
+         wrmsr: Writes the contents of registers edx:eax into the 64-bit model specific register (MSR) specified in the ecx register.
+      */
+      push %ebp
+      movl %esp, %ebp
+
+      movl 8(%ebp), %ecx
+      movl 12(%ebp), %eax
+      movl $0xAAAA, %edx /*Nobody cares about this...*/
+
+      wrmsr
+
+      pop %ebp
+      ret

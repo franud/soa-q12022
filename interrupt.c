@@ -74,6 +74,12 @@ void setTrapHandler(int vector, void (*handler)(), int maxAccessibleFromPL)
   idt[vector].highOffset      = highWord((DWord)handler);
 }
 
+void setMSR()
+{
+  writeMSR (0x174, __KERNEL_CS); //OS CS
+  writeMSR (0x175, INITIAL_ESP); // OS SYS STACK (ESP)
+  writeMSR (0x176, syscall_handler_sysenter); // OS EIP (HANDLER ADDRESS)
+}
 
 void setIdt()
 {
