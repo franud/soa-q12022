@@ -139,3 +139,21 @@ ENTRY(clock_handler)
      call clock_routine
      RESTORE_ALL
      iret
+
+
+ENTRY(task_switch)
+    pushl %ebp
+    movl %esp, %ebp
+
+    pushl %ebx
+    pushl %esi
+    pushl %edi
+
+    pushl 8(%ebp)
+    call inner_task_switch
+    addl $4, %esp
+
+    popl %edi
+    popl %esi
+    popl %ebx
+    ret

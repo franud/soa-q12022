@@ -89,7 +89,7 @@ void init_idle (void)
 	/* The previous values are useless if the kernel_esp field doesn't
 	 * point at them.
 	 * For that reason this task's kernel_esp shall point at the value we
-	 * want task_swit*ch to pop into EBP.
+	 * want task_switch to pop into EBP.
 	 */
 	idle_pcb->kernel_esp = &(idle_task_union->stack[KERNEL_STACK_SIZE-2]);
 
@@ -132,6 +132,10 @@ void init_sched()
 	}
 
 	INIT_LIST_HEAD(&readyqueue);
+}
+
+void inner_task_switch(union task_union *new){
+
 }
 
 struct task_struct* current()
