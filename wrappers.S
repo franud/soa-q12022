@@ -77,7 +77,7 @@ ENTRY(gettime)
 
     movl $10, %eax
 
-    int $0x80
+    sysenter
     
     cmpl $0, %eax /* eax >= 0*/
     jge endif2 
