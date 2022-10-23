@@ -79,3 +79,14 @@ struct task_struct* current()
   return (struct task_struct*)(ret_value&0xfffff000);
 }
 
+void init_freequeue () 
+{
+	INIT_LIST_HEAD(&freequeue);
+
+	for (int i = 0; i < NR_TASKS; ++i)
+	{
+		struct list_head* list_of_ith_task = &task[i].task;
+
+		list_add(list_of_ith_task, &freequeue);
+	}
+}
