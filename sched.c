@@ -55,8 +55,32 @@ void cpu_idle(void)
 
 void init_idle (void)
 {
+	/* 1) Get an available task_union from the freequeue to contain the characteristics of this process. 
+	FRAN: Sabemos que el primer elemento es el list_head de task[0] porque se han inicializado en orden [0..NR_TASKS-1].
+	*/
+	struct list_head * first_queue_element = list_first(&freequeue);
+	struct task_struct * idle_pcb = list_head_to_task_struct(first_queue_element);
+	/* 2) Assign PID 0 to the process. */
+	idle_pcb->PID = 0;
+	/* 3) Initialize field dir_pages_baseAaddr with a new directory to store the process address space using the allocate_DIR routine.*/
+	allocate_DIR(idle_pcb);
+	/* 4) Initialize an execution context for the procees to restore it when it gets assigned the cpu (see section 4.5) and executes cpu_idle.*/
+	union task_union * idle_union = (union task_union *) idle_pcb;
 
-}
+	/*Store in the stack of the idle process the address of the code that it will execute (address of the cpu_idle function). */
+	idle_union->stack[KERNEL_STACK_SIZE - 1] = (DWord) &cpu_idle;
+
+	/*Store in the stack the initial value that we want to assign to register ebp when undoing the dynamic link (it can be 0)
+	FRAN: Es 0x41414141 porque es "AAAA" en ascii y me ayuda verlo en gdb. */
+	idle_union->stack[KERNEL_STACK_SIZE - 2] = 0x41414141;
+
+	/* Finally, we need to keep (in a field of its task_struct) the position of the stack where we have stored the initial value for the ebp register. This value will be loaded in the esp register when undoing the dynamic link.
+	*/
+	idle_pcb->kernel_esp = &idle_union->stack[KERNEL_STACK_SIZE - 2];
+
+	/* 6) Initialize the global variable idle_task, which will help to get easily the task_struct of the idle process. */
+	idle_task = idle_pcb;
+}	
 
 void init_task1(void)
 {
@@ -65,7 +89,8 @@ void init_task1(void)
 
 void init_sched()
 {
-
+	init_readyqueue();
+	init_freequeue();
 }
 
 struct task_struct* current()
@@ -89,4 +114,9 @@ void init_freequeue ()
 
 		list_add(list_of_ith_task, &freequeue);
 	}
+}
+
+void init_readyqueue ()
+{
+	INIT_LIST_HEAD(&readyqueue);
 }
