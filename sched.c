@@ -62,7 +62,7 @@ void init_idle (void)
 	struct list_head * first_queue_element = list_first(&freequeue);
 	struct task_struct * idle_pcb = list_head_to_task_struct(first_queue_element);
 	/*FRAN: Hay que quitar first_queue_element del freequeue? yo creo que sí*/
-	// list_del(first_queue_element);
+	list_del(first_queue_element);
 	/* 2) Assign PID 0 to the process. */
 	idle_pcb->PID = 0;
 	/* 3) Initialize field dir_pages_baseAaddr with a new directory to store the process address space using the allocate_DIR routine.*/
