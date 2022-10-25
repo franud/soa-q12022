@@ -5,6 +5,7 @@
 #include <sched.h>
 #include <mm.h>
 #include <io.h>
+#include <entry.h>
 
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
@@ -60,6 +61,8 @@ void init_idle (void)
 	*/
 	struct list_head * first_queue_element = list_first(&freequeue);
 	struct task_struct * idle_pcb = list_head_to_task_struct(first_queue_element);
+	/*FRAN: Hay que quitar first_queue_element del freequeue? yo creo que sí*/
+	// list_del(first_queue_element);
 	/* 2) Assign PID 0 to the process. */
 	idle_pcb->PID = 0;
 	/* 3) Initialize field dir_pages_baseAaddr with a new directory to store the process address space using the allocate_DIR routine.*/
@@ -84,6 +87,31 @@ void init_idle (void)
 
 void init_task1(void)
 {
+	struct list_head * first_queue_element = list_first(&freequeue);
+	struct task_struct * task1_pcb = list_head_to_task_struct(first_queue_element);
+
+	list_del(first_queue_element);
+
+	/* 1) Assign PID 1 to the process */
+	task1_pcb->PID = 1;
+	/* 2) Initialize field dir_pages_baseAaddr with a new directory to store the process address space using the allocate_DIR routine. */
+	allocate_DIR(task1_pcb);
+
+	/* 3) Complete the initialization of its address space, by using the function set_user_pages (see file mm.c). This function allocates physical pages to hold the user address space (both code and data pages) and adds to the page table the logical-to-physical translation for these pages. Remind that the region that supports the kernel address space is already configure for all the possible processes by the function init_mm. */
+	set_user_pages(task1_pcb);
+
+	/* 4) Update the TSS to make it point to the new_task system stack. In case you use sysenter you must modify also the MSR number 0x175.
+	FRAN: Aquí tener cuidado con el sysenter
+	*/
+	union task_union * task1_union = (union task_union *) task1_pcb;
+
+	DWord * task1_stack_base = &task1_union->stack[KERNEL_STACK_SIZE-1];
+
+	tss.esp0 = task1_stack_base;
+	writeMSR(0x175, task1_stack_base);
+
+	/* 5) Set its page directory as the current page directory in the system, by using the set_cr3 function (see file mm.c). */
+	set_cr3(task1_pcb->dir_pages_baseAddr);
 }
 
 

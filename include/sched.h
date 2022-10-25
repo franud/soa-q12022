@@ -18,6 +18,7 @@ struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
   struct list_head list;
+  DWord * kernel_esp;
 };
 
 union task_union {
@@ -32,6 +33,11 @@ void init_freequeue();
 
 struct list_head readyqueue;
 void init_readyqueue();
+
+/*
+5) Define a global variable idle_task
+*/
+struct task_strcut * idle_task;
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 
