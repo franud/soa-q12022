@@ -10,7 +10,7 @@
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
 
-#if 0
+#if 1
 struct task_struct *list_head_to_task_struct(struct list_head *l)
 {
   return list_entry( l, struct task_struct, list);
@@ -47,7 +47,6 @@ int allocate_DIR(struct task_struct *t)
 void cpu_idle(void)
 {
 	__asm__ __volatile__("sti": : :"memory");
-
 	while(1)
 	{
 	;
@@ -112,6 +111,27 @@ void init_task1(void)
 
 	/* 5) Set its page directory as the current page directory in the system, by using the set_cr3 function (see file mm.c). */
 	set_cr3(task1_pcb->dir_pages_baseAddr);
+
+}
+
+void inner_task_switch(union task_union * new) {
+	/*1) Update the pointer to the system stack to point to the stack of new_task. This step depends on the implemented mechanism to enter the system. In the case that the int assembly instruction is used to invoke the system code, TSS.esp0 must be modified to make it point to the stack of new_task. If the system code is invoked using sysenter, MSR number 0x175 must be also modified. */
+	/*FRAN: Tener cuidado con lo que dijo el profe de tener solo o int 0x80 o sysenter, quizá alguno de esos dos falta, aunque realmente int 0x80 no es la única interrupción así que creo que deberíamos dejarlo.
+	FRAN: Tiene que apuntar a la base del stack o al esp del stack?
+	*/
+	DWord * current_kernel_esp0 = &(current()->kernel_esp);
+	DWord new_kernel_esp0 = new->task.kernel_esp;
+	tss.esp0 = new_kernel_esp0;
+	writeMSR(0x175, new_kernel_esp0);
+
+	/*2) Change the user address space by updating the current page directory: use the set_cr3 funtion to set the cr3 register to point to the page directory of the new_task. */
+	set_cr3 (get_DIR(&new->task));
+
+	/*3) Store the current value of the EBP register in the PCB. EBP has the address of the current system stack where the inner_task_switch routine begins (the dynamic link). */
+	/*4) Change the current system stack by setting ESP register to point to the stored value in the new PCB */
+	swap_stacks(current_kernel_esp0, new_kernel_esp0);
+	
+	/*FRAN: Aquí se supone que debería haber un pop de %ebp y un ret pero nunca llegamos a él*/
 }
 
 
@@ -138,7 +158,7 @@ void init_freequeue ()
 
 	for (int i = 0; i < NR_TASKS; ++i)
 	{
-		struct list_head* list_of_ith_task = &task[i].task;
+		struct list_head* list_of_ith_task = &task[i].task.list;
 
 		list_add(list_of_ith_task, &freequeue);
 	}
