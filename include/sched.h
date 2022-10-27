@@ -16,9 +16,9 @@ enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
-  page_table_entry * dir_pages_baseAddr;  /* directory base address */
+  page_table_entry * dir_pages_baseAddr;
   struct list_head list;
-  unsigned long * kernel_esp;
+  DWord kernel_esp;
 };
 
 union task_union {
@@ -27,6 +27,18 @@ union task_union {
 };
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
+
+struct list_head freequeue;
+void init_freequeue();
+
+struct list_head readyqueue;
+void init_readyqueue();
+
+/*
+5) Define a global variable idle_task
+*/
+struct task_struct * idle_task;
+
 
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
@@ -40,11 +52,13 @@ void init_idle(void);
 
 void init_sched(void);
 
-extern struct task_struct * idle_task;
-
 struct task_struct * current();
 
-void task_switch(union task_union*t);
+void task_switch(union task_union * new);
+
+void inner_task_switch(union task_union * new);
+
+void swap_stacks (DWord * current_kernel_esp0, DWord * new_kernel_esp0);
 
 struct task_struct *list_head_to_task_struct(struct list_head *l);
 
