@@ -121,8 +121,11 @@ void inner_task_switch(union task_union * new) {
 	*/
 	DWord * current_kernel_esp0 = &(current()->kernel_esp);
 	DWord new_kernel_esp0 = new->task.kernel_esp;
-	tss.esp0 = new_kernel_esp0;
-	writeMSR(0x175, new_kernel_esp0);
+
+	DWord new_stack_base = (DWord) &(new->stack[KERNEL_STACK_SIZE - 1]);
+	
+	tss.esp0 = new_stack_base;
+	writeMSR(0x175, new_stack_base);
 
 	/*2) Change the user address space by updating the current page directory: use the set_cr3 funtion to set the cr3 register to point to the page directory of the new_task. */
 	set_cr3 (get_DIR(&new->task));
