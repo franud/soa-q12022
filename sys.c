@@ -73,6 +73,62 @@ int sys_fork()
 {
     int PID=-1;
 
+    /*a) Get a free task_struct for the process. If there is no space for a new process, an error will be returned. */
+    if (list_empty (&freequeue)) {
+        return -EAGAIN;
+    }
+    struct list_head * child_list_entry = list_first(&freequeue);
+    list_del(child_list_entry);
+
+    /*b) Inherit system data: copy the parent’s task_union to the child.*/
+    struct task_struct * child_pcb = list_head_to_task_struct(child_list_entry);
+    struct task_struct * parent_pcb = current();
+
+    union task_union * child_union = (union task_union *) child_pcb;
+    union task_union * parent_union = (union task_union *) parent_pcb;        
+    copy_data(parent_union, child_union, sizeof(union task_union));
+
+    /* c) Initialize field dir_pages_baseAddr with a new directory to store the process address space using the allocate_DIR routine. */ 
+
+    allocate_DIR(get_DIR(child_pcb));
+
+    /* d) Search physical pages in which to map logical pages for data+stack of the child process (using the alloc_frames function). If there is no enough free pages, an error will be return. */
+    int allocated_frame;
+    int availaible_frames [NUM_PAG_DATA];
+    for (int i = 0; i < NUM_PAG_DATA; ++i) {
+        allocated_frame = alloc_frame();
+        availaible_frames[i] = allocated_frame;
+        if (allocated_frame == -1) {
+            for (int j = 0; j < i; ++j) {
+                free_frame(availaible_frames[j]);
+            }
+            list_add_tail(&child_pcb->list, &freequeue);
+            return -ENOMEM;
+        }
+    }
+
+    /* e.i) Create new address space: Access page table of the child process through the directory field in the task_struct to initialize it (get_PT routine can be used) */
+    page_table_entry * child_page_table = get_PT(child_pcb);
+    page_table_entry * parent_page_table = get_PT(parent_pcb);
+    
+    /*A) Page table entries for the system code and data and for the user code can be a copy of the page table entries of the parent process (they will be shared)*/
+    for (int i = 1; i < NUM_PAG_KERNEL; i++) {
+        set_ss_pag(child_page_table, i, get_frame(parent_page_table, i));
+    }
+
+    for (int i = PAG_LOG_INIT_CODE; i < PAG_LOG_INIT_CODE + NUM_PAG_CODE; ++i) {
+        set_ss_pag(child_page_table, i, get_frame(parent_page_table, i));
+    }
+
+    /*B) Page table entries for the user data+stack have to point to new allocated pages which hold this region */
+    for (int i = 0; i < NUM_PAG_DATA; i++)
+    {
+        set_ss_pag(child_page_table, PAG_LOG_INIT_DATA + i, availaible_frames[i]);
+    }
+
+    
+    
+    
     // creates the child process
     
     return PID;
