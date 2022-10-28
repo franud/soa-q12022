@@ -52,6 +52,11 @@ int __attribute__ ((__section__(".text.main")))
     //test_write3();
     //test_write4();
 
+    int pid = getpid();
+
+    itoa(pid, buff);
+    write (1, buff, 32);
+
     while(1) {
         //test_gettime();
     }
