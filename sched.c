@@ -106,8 +106,8 @@ void init_task1(void)
 
 	DWord * task1_stack_base = &task1_union->stack[KERNEL_STACK_SIZE-1];
 
-	tss.esp0 = task1_stack_base;
-	writeMSR(0x175, task1_stack_base);
+	tss.esp0 = (DWord) task1_stack_base;
+	writeMSR(0x175, (unsigned int) task1_stack_base);
 
 	/* 5) Set its page directory as the current page directory in the system, by using the set_cr3 function (see file mm.c). */
 	set_cr3(task1_pcb->dir_pages_baseAddr);
@@ -120,7 +120,7 @@ void inner_task_switch(union task_union * new) {
 	FRAN: Tiene que apuntar a la base del stack o al esp del stack?
 	*/
 	DWord * current_kernel_esp0 = &(current()->kernel_esp);
-	DWord new_kernel_esp0 = new->task.kernel_esp;
+	DWord * new_kernel_esp0 = new->task.kernel_esp;
 
 	DWord new_stack_base = (DWord) &(new->stack[KERNEL_STACK_SIZE - 1]);
 

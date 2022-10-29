@@ -51,12 +51,22 @@ int __attribute__ ((__section__(".text.main")))
     //test_write2();
     //test_write3();
     //test_write4();
+    int pid = fork();
+    
+    if (pid == 0) {
+        write(1, "Soy un hijo\n", 13);
+    }
+    else if (pid > 0) {
+        write(1, "Soy un papi\n", 13);
+        char buffer_pid [2];
+        itoa(pid, buffer_pid);
+        write(1, buffer_pid, 2);
+    }
+    else {
+        write(1, "no soy nadie\n", 14);
+    }
 
-    int pid = getpid();
-
-    itoa(pid, buff);
-    write (1, buff, 32);
-
+    write (1, "adio\n", 5);
     while(1) {
         //test_gettime();
     }

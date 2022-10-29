@@ -27,8 +27,14 @@ int check_fd(int fd, int permissions)
 
 extern int zeos_ticks;
 
+int next_pid = 2;
+
 #define BUFFER_SIZE 256
 char write_buffer[BUFFER_SIZE];
+
+int ret_from_fork () {
+    return 0;
+}
 
 int sys_write(int fd, char * buffer, int size) {
     int err = check_fd(fd, ESCRIPTURA);
@@ -71,7 +77,6 @@ int sys_getpid()
 
 int sys_fork()
 {
-    int PID=-1;
 
     /*a) Get a free task_struct for the process. If there is no space for a new process, an error will be returned. */
     if (list_empty (&freequeue)) {
@@ -90,7 +95,7 @@ int sys_fork()
 
     /* c) Initialize field dir_pages_baseAddr with a new directory to store the process address space using the allocate_DIR routine. */ 
 
-    allocate_DIR(get_DIR(child_pcb));
+    allocate_DIR(child_pcb);
 
     /* d) Search physical pages in which to map logical pages for data+stack of the child process (using the alloc_frames function). If there is no enough free pages, an error will be return. */
     int allocated_frame;
@@ -111,7 +116,7 @@ int sys_fork()
     page_table_entry * child_page_table = get_PT(child_pcb);
     page_table_entry * parent_page_table = get_PT(parent_pcb);
     
-    /*A) Page table entries for the system code and data and for the user code can be a copy of the page table entries of the parent process (they will be shared)*/
+    /*e.i.A) Page table entries for the system code and data and for the user code can be a copy of the page table entries of the parent process (they will be shared)*/
     for (int i = 1; i < NUM_PAG_KERNEL; i++) {
         set_ss_pag(child_page_table, i, get_frame(parent_page_table, i));
     }
@@ -120,18 +125,64 @@ int sys_fork()
         set_ss_pag(child_page_table, i, get_frame(parent_page_table, i));
     }
 
-    /*B) Page table entries for the user data+stack have to point to new allocated pages which hold this region */
+    /*e.i.B) Page table entries for the user data+stack have to point to new allocated pages which hold this region */
     for (int i = 0; i < NUM_PAG_DATA; i++)
     {
         set_ss_pag(child_page_table, PAG_LOG_INIT_DATA + i, availaible_frames[i]);
     }
 
+    /*e.ii) Copy the user data+stack pages from the parent process to the child process.*/
+
+    for (int i = 0; i < NUM_PAG_DATA; ++i) {
+        /*e.ii.A) Use temporal free entries on the page table of the parent. Use the set_ss_pag and del_ss_pag functions.*/
+        set_ss_pag(parent_page_table, PAG_LOG_INIT_DATA + NUM_PAG_DATA + i, availaible_frames[i]);
+        /*e.ii.B) Copy data+stack pages.*/
+        copy_data((PAG_LOG_INIT_DATA + i) << 12, (PAG_LOG_INIT_DATA + NUM_PAG_DATA + i) << 12, PAGE_SIZE);
+        /*e.ii.C) Free temporal entries in the page table and ...*/
+        del_ss_pag(parent_page_table, PAG_LOG_INIT_DATA + NUM_PAG_DATA + i);
+    }
+
+    /* e.ii.C) flush the TLB to really disable the parent process to access the child pages.*/
+    set_cr3(get_DIR(parent_pcb));
+
+    /*f) Assign a new PID to the process. The PID must be different from its position in the task_array table.*/
+    child_pcb->PID = next_pid;          
+    ++next_pid;
+
+    /*g) Initialize the fields of the task_struct that are not common to the child. */
+
+
+    /*  
+      $0              <- 0x13
+      @ret_from_fork  <- 0x12
+      @ret_to_handler <- 0x11 <- (syscall_handler)
+      %ebx
+      %ecx
+      %edx
+      %esi
+      %edi
+      %ebp
+      %eax
+      %ds
+      %es
+      %fs
+      %gs
+      %eip
+      %cs
+      %eflags
+      %esp
+      %ss           
+    */
+    DWord * child_kernel_esp = (DWord *) KERNEL_ESP(child_union);
+    child_kernel_esp[-0x13] = 0;
+    child_kernel_esp[-0x12] = ret_from_fork;
+    child_pcb->kernel_esp = &child_kernel_esp[-0x13];
     
-    
-    
-    // creates the child process
-    
-    return PID;
+    /*i) Insert the new process into the ready list: readyqueue. This list will contain all processes that are ready to execute but there is no processor to run them. */
+    list_add(&child_pcb->list, &readyqueue);
+
+    /*j) Return the PID of the child process 👶*/
+    return child_pcb->PID;
 }
 
 void sys_exit()
