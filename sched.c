@@ -137,6 +137,58 @@ void inner_task_switch(union task_union * new) {
 	/*FRAN: Aquí se supone que debería haber un pop de %ebp y un ret pero nunca llegamos a él*/
 }
 
+int get_quantum (struct task_struct *t) {
+	return t->quantum;
+}
+
+void set_quantum (struct task_struct *t, int new_quantum) {
+	t->quantum = new_quantum;
+}
+
+void update_sched_data_rr() {
+	--current_quantum_ticks;	
+}
+
+int needs_sched_rr() {
+	if (current_quantum_ticks > 0) 
+		return 0;
+	return 1;
+}
+
+enum state_t get_queue_state (struct list_head * list) {
+	if (list == &readyqueue) {
+		return ST_READY;
+	}
+	return ST_BLOCKED;
+}
+
+void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
+	enum state_t state = t->state;
+	
+	if (state != ST_RUN) {
+		list_del(&t->list);
+	}
+
+	if (dest == NULL) { // t is the new running process
+		t->state = ST_RUN;
+		return;
+	}
+
+	list_add_tail(&t->list, dest);
+	/* update state */
+
+	t->state = get_queue_state(dest);
+	
+}
+
+void sched_next_rr() {
+	
+	struct list_head * first = list_first(&readyqueue);
+	struct task_struct * next_process = list_head_to_task_struct(first);
+
+	task_switch(next_process);
+
+}
 
 void init_sched()
 {

@@ -14,11 +14,15 @@
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
+int current_quantum_ticks;
+
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
   page_table_entry * dir_pages_baseAddr;
   struct list_head list;
   DWord * kernel_esp;
+  int quantum;
+  enum state_t state;
 };
 
 union task_union {
@@ -89,5 +93,9 @@ int needs_sched_rr();
 
 /*Function to update the relevant information to take scheduling decisions. In the case of the round robin policy it should update the number of ticks that the process has executed since it got assigned the cpu.*/
 void update_sched_data_rr();
+
+int get_quantum (struct task_struct *t);
+void set_quantum (struct task_struct *t, int new_quantum);
+
 
 #endif  /* __SCHED_H__ */
