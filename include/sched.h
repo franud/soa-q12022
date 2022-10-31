@@ -67,9 +67,27 @@ page_table_entry * get_PT (struct task_struct *t) ;
 page_table_entry * get_DIR (struct task_struct *t) ;
 
 /* Headers for the scheduling policy */
+
+/*Function to select the next process to execute, to extract it from the ready queue and to invoke the context switch process. 
+This function should always be executed after updating the state of the current process (after calling function update_process_state_rr).
+*/
 void sched_next_rr();
+
+/* 
+Function to update the current state of a process to a new state. 
+This function deletes the process from its current queue (state) and inserts it into a new queue (for example, the free queue or the ready queue).
+If the current state of the process is running, then there is no need to delete it from any queue.
+The parameters of this function are the task_struct of the process and the queue according to the new state of the process.
+If the new state of the process is running, then the queue parameter should be NULL.
+*/
 void update_process_state_rr(struct task_struct *t, struct list_head *dest);
+
+/*Function to decide if it is necessary to change the current process.
+returns: 1 if it is necessary to change the current process and 0 otherwise
+*/
 int needs_sched_rr();
+
+/*Function to update the relevant information to take scheduling decisions. In the case of the round robin policy it should update the number of ticks that the process has executed since it got assigned the cpu.*/
 void update_sched_data_rr();
 
 #endif  /* __SCHED_H__ */
