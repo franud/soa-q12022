@@ -104,7 +104,7 @@ void init_task1(void)
 	*/
 	union task_union * task1_union = (union task_union *) task1_pcb;
 
-	DWord * task1_stack_base = &task1_union->stack[KERNEL_STACK_SIZE-1];
+	DWord * task1_stack_base = &task1_union->stack[KERNEL_STACK_SIZE];
 
 	tss.esp0 = (DWord) task1_stack_base;
 	writeMSR(0x175, (unsigned int) task1_stack_base);
@@ -122,10 +122,10 @@ void inner_task_switch(union task_union * new) {
 	DWord * current_kernel_esp0 = &(current()->kernel_esp);
 	DWord * new_kernel_esp0 = new->task.kernel_esp;
 
-	DWord new_stack_base = (DWord) &(new->stack[KERNEL_STACK_SIZE - 1]);
+	DWord * new_stack_base = &(new->stack[KERNEL_STACK_SIZE]);
 
-	tss.esp0 = new_stack_base;
-	writeMSR(0x175, new_stack_base);
+	tss.esp0 = (DWord) new_stack_base;
+	writeMSR(0x175, (unsigned int) new_stack_base);
 
 	/*2) Change the user address space by updating the current page directory: use the set_cr3 funtion to set the cr3 register to point to the page directory of the new_task. */
 	set_cr3 (get_DIR(&new->task));
