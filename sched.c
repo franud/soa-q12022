@@ -2,10 +2,11 @@
  * sched.c - initializes struct for task 0 anda task 1
  */
 
-#include <sched.h>
-#include <mm.h>
-#include <io.h>
-#include <entry.h>
+#include "list.h"
+#include "sched.h"
+#include "mm.h"
+#include "io.h"
+#include "entry.h"
 
 union task_union task[NR_TASKS]
   __attribute__((__section__(".data.task")));
@@ -150,9 +151,23 @@ void update_sched_data_rr() {
 }
 
 int needs_sched_rr() {
-	if (current_quantum_ticks > 0) 
+	/* If quantum >= 0 we still don't have to switch tasks. */
+	if (current_quantum_ticks > 0)
 		return 0;
-	return 1;
+	/*  If quantum has reached zero, but there are no more available
+	 *  processes in the ready queue, there is no task switch and we 
+	 *  reset the quantum.
+	 */ 
+	else if (list_empty(&readyqueue)) {
+		current_quantum_ticks = get_quantum(current());
+		return 0;
+	}
+	/* if quantum has reached zero and there are available processes,
+	 * it's time to switch tasks.
+	 */
+	else {
+		return 1;
+	}
 }
 
 enum state_t get_queue_state (struct list_head * list) {
@@ -168,7 +183,10 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 	if (state != ST_RUN) {
 		list_del(&t->list);
 	}
-
+	
+	/* if dest isn't a pointer to a queue; 
+	 * new process state is run 
+	 */ 
 	if (dest == NULL) { // t is the new running process
 		t->state = ST_RUN;
 		return;
@@ -182,12 +200,26 @@ void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 }
 
 void sched_next_rr() {
-	
-	struct list_head * first = list_first(&readyqueue);
-	struct task_struct * next_process = list_head_to_task_struct(first);
+	struct task_struct * next_process;
 
-	task_switch(next_process);
+	if (list_empty(&readyqueue)) {
+		next_process = idle_task;
+	} else {
+		struct list_head * next = list_first(&readyqueue);
+		next_process = list_head_to_task_struct(next);
+	}
+	current_quantum_ticks = get_quantum(next_process);
 
+	task_switch((union task_union *) next_process);
+
+}
+
+void sched() {
+	update_sched_data_rr();
+	if (needs_sched_rr()) {
+		update_process_state_rr(current(), &readyqueue);
+		sched_next_rr();
+	}
 }
 
 void init_sched()
