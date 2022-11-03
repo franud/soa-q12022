@@ -19,7 +19,11 @@ struct task_struct *list_head_to_task_struct(struct list_head *l)
 #endif
 
 extern struct list_head blocked;
+struct list_head freequeue;
+struct list_head readyqueue;
 
+struct task_struct * idle_task;
+int current_quantum_ticks;
 
 /* get_DIR - Returns the Page Directory address for task 't' */
 page_table_entry * get_DIR (struct task_struct *t) 
@@ -206,15 +210,18 @@ void sched_next_rr() {
 		next_process = idle_task;
 	} else {
 		struct list_head * next = list_first(&readyqueue);
+		list_del(next);
 		next_process = list_head_to_task_struct(next);
 	}
+
 	current_quantum_ticks = get_quantum(next_process);
+	next_process->state = ST_RUN;
 
 	task_switch((union task_union *) next_process);
 
 }
 
-void sched() {
+void schedule() {
 	update_sched_data_rr();
 	if (needs_sched_rr()) {
 		update_process_state_rr(current(), &readyqueue);

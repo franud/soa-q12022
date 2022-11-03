@@ -14,7 +14,7 @@
 
 enum state_t { ST_RUN, ST_READY, ST_BLOCKED };
 
-int current_quantum_ticks;
+extern int current_quantum_ticks;
 
 struct task_struct {
   int PID;			/* Process ID. This MUST be the first field of the struct. */
@@ -32,16 +32,16 @@ union task_union {
 
 extern union task_union task[NR_TASKS]; /* Vector de tasques */
 
-struct list_head freequeue;
+extern struct list_head freequeue;
 void init_freequeue();
 
-struct list_head readyqueue;
+extern struct list_head readyqueue;
 void init_readyqueue();
 
 /*
 5) Define a global variable idle_task
 */
-struct task_struct * idle_task;
+extern struct task_struct * idle_task;
 
 #define KERNEL_ESP(t)       	(DWord) &(t)->stack[KERNEL_STACK_SIZE]
 
@@ -93,6 +93,12 @@ int needs_sched_rr();
 
 /*Function to update the relevant information to take scheduling decisions. In the case of the round robin policy it should update the number of ticks that the process has executed since it got assigned the cpu.*/
 void update_sched_data_rr();
+
+
+/* System scheduler. Must be called from clock_routine.
+ *
+ */
+void schedule();
 
 int get_quantum (struct task_struct *t);
 void set_quantum (struct task_struct *t, int new_quantum);
