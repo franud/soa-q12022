@@ -187,5 +187,23 @@ int sys_fork()
 
 void sys_exit()
 {  
+    /*Free the data structures and resources of this process (physical memory, task_struct, and so). It uses the free_frame function to free physical pages.*/
+    page_table_entry * current_page_table = get_PT(current());
+
+    for (int i = PAG_LOG_INIT_DATA; i < NUM_PAG_DATA; ++i) {
+        free_frame(get_frame(current_page_table, i));
+        del_ss_pag(current_page_table, i);
+    }
+
+    {
+        current()->PID = -1;
+        current()->dir_pages_baseAddr = NULL;
+        current()->kernel_esp = NULL;
+        current()->quantum = 0;
+    }
+
+    list_add_tail(&(current()->list),&freequeue);
+
+    sched_next_rr();
 }
 

@@ -143,3 +143,38 @@ ENTRY(gettime)
 2:
 	popl %ebp
 	ret
+
+
+ENTRY(exit)
+	pushl %ebp
+	movl %esp, %ebp
+
+	pushl %ebx
+	pushl %ecx
+	pushl %edx
+
+	movl $1, %eax
+	
+	pushl $1f
+
+	pushl %ebp
+	mov %esp, %ebp
+
+	sysenter
+1:
+	popl %ebp
+	addl $4, %esp
+
+	popl %edx
+	popl %ecx
+	popl %ebx
+
+	cmpl $0, %eax
+	jge 2f
+
+	negl %eax
+	movl %eax, errno
+	movl $-1, %eax
+2:
+	popl %ebp
+	ret
