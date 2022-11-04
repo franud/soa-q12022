@@ -155,52 +155,36 @@ void update_sched_data_rr() {
 }
 
 int needs_sched_rr() {
-	/* If quantum >= 0 we still don't have to switch tasks. */
-	if (current_quantum_ticks > 0)
-		return 0;
-	/*  If quantum has reached zero, but there are no more available
-	 *  processes in the ready queue, there is no task switch and we 
-	 *  reset the quantum.
-	 */ 
-	else if (list_empty(&readyqueue)) {
+	
+	if (current_quantum_ticks <= 0 && !list_empty(&readyqueue))
+		return 1;
+
+	if (current_quantum_ticks <= 0 && list_empty(&readyqueue))
 		current_quantum_ticks = get_quantum(current());
 		return 0;
-	}
-	/* if quantum has reached zero and there are available processes,
-	 * it's time to switch tasks.
-	 */
-	else {
-		return 1;
-	}
+
+	return 0;
 }
 
 enum state_t get_queue_state (struct list_head * list) {
+	if (list == NULL) {
+		return ST_RUN;
+	}
 	if (list == &readyqueue) {
 		return ST_READY;
 	}
-	return ST_BLOCKED;
+	return ST_BLOCKED; //No deberia llegar aquí
 }
 
 void update_process_state_rr(struct task_struct *t, struct list_head *dest) {
 	enum state_t state = t->state;
-	
 	if (state != ST_RUN) {
 		list_del(&t->list);
 	}
-	
-	/* if dest isn't a pointer to a queue; 
-	 * new process state is run 
-	 */ 
-	if (dest == NULL) { // t is the new running process
-		t->state = ST_RUN;
-		return;
+	if (dest != NULL) {
+		list_add_tail(&t->list, dest);
 	}
-
-	list_add_tail(&t->list, dest);
-	/* update state */
-
 	t->state = get_queue_state(dest);
-	
 }
 
 void sched_next_rr() {
@@ -218,7 +202,6 @@ void sched_next_rr() {
 	next_process->state = ST_RUN;
 
 	task_switch((union task_union *) next_process);
-
 }
 
 void schedule() {
